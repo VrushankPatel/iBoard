@@ -1,12 +1,14 @@
 import React, { Component } from 'react'
 import { Button, Form, ProgressBar } from "react-bootstrap";
 import Util from "../Util/Util";
+// import socketIOClient from "socket.io-client";
+// const ENDPOINT = "https://iboardstream.herokuapp.com/";
 var axios = require('axios');
 
 class IBoard extends Component {
     constructor(props) {
         super(props);
-        this.state = { text: "", uniqueId: "", isLoadDisabled: false, isPublishDisabled: false, isInProgress: false, autoPublish: false, autoReload: false, name: '', typing: false, typingTimeout: 0, reloadTimeout: 0 };
+        this.state = { text: "", uniqueId: "", isLoadDisabled: false, isPublishDisabled: false, isInProgress: false, autoPublish: false, autoReload: false, name: '', typing: false, typingTimeout: 0, reloadTimeout: 0, isTextDisabled: false };
         this.changeUniqueId = this.changeUniqueId.bind(this);
         this.changeText = this.changeText.bind(this);
         this.identifier = Util.identifier;
@@ -29,18 +31,28 @@ class IBoard extends Component {
                         if (this.state.autoPublish) {
                             publishData();
                         }
-                    }, 100)
+                    }, 50)
                 });
             }
         });
     }
+    componentDidMount() {
+        Util.awakeEndpoint();
+        // const socket = socketIOClient(ENDPOINT);
+        // socket.on("FromAPI", data => {
+        //     socket.emit("uniqueId", {
+        //         uniqueId: "Vrushank123"
+        //     });
+        //     console.log(data);
+        // });
+    }
     getData = () => {
         if (!this.state.uniqueId) return;
-        this.setState({ isLoadDisabled: true, isInProgress: this.state.autoReload ? false : true });
+        this.setState({ isLoadDisabled: true, isInProgress: this.state.autoReload ? false : true, isTextDisabled: true });
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId })
         const config = {
             method: 'POST',
-            url: this.identifier + "/DEBoardGet",
+            url: this.identifier + "/iBoardGet",
             headers: { 'Content-Type': 'application/json' },
             data: data
         };
@@ -48,24 +60,24 @@ class IBoard extends Component {
         axios(config)
             .then((response) => {
                 if (response.status === 204) {
-                    alert("No Data Found for this Id");
-                    this.setState({ autoReload: false, isLoadDisabled: false });
+                    // alert("No Data Found for this Id");
+                    this.setState({ isLoadDisabled: false, isTextDisabled: false });
                 }
-                this.setState({ text: response.data, isLoadDisabled: this.state.autoReload || this.state.autoPublish, isInProgress: false })
+                this.setState({ text: response.data, isLoadDisabled: this.state.autoReload || this.state.autoPublish, isInProgress: false, isTextDisabled: false })
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
                 else alert("Error occured");
-                this.setState({ isPublishDisabled: false, isLoadDisabled: false, isInProgress: false, autoReload: false })
+                this.setState({ isPublishDisabled: false, isLoadDisabled: false, isInProgress: false, autoReload: false, isTextDisabled: false })
             });
     }
     publishData = () => {
-        if (!this.state.uniqueId || !this.state.text) return;
+        if (!this.state.uniqueId) return;
         this.setState({ isPublishDisabled: true, isInProgress: this.state.autoPublish ? false : true });
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId, "payLoad": this.state.text })
         const config = {
             method: 'POST',
-            url: this.identifier + "/DEBoardInsertPayLoad",
+            url: this.identifier + "/iBoardInsertPayLoad",
             headers: { 'Content-Type': 'application/json' },
             data: data
         };
@@ -83,7 +95,9 @@ class IBoard extends Component {
             });
     }
     clearFields() {
-        this.setState({ text: "" });
+        if (!this.state.autoPublish && !this.state.autoReload) {
+            this.setState({ text: "" });
+        }
     }
     startReloading() {
         setInterval(() => {
@@ -91,7 +105,7 @@ class IBoard extends Component {
                 this.getData();
                 return;
             }
-        }, 1000);
+        }, 300);
     }
     enableAutoPublish = () => {
         this.getData();
@@ -147,7 +161,7 @@ class IBoard extends Component {
                     </div>
                 </div>
                 <Form.Group controlId="exampleForm.ControlTextarea1">
-                    <Form.Control as="textarea" placeholder="Your text will appear here" style={textAreaStyle} value={this.state.text} onChange={this.changeText} rows={50} disabled={this.state.autoReload} />
+                    <Form.Control as="textarea" placeholder="Your text will appear here" style={textAreaStyle} value={this.state.text} onChange={this.changeText} rows={50} disabled={this.state.autoReload || this.state.isTextDisabled} />
                 </Form.Group>
             </div >
         );
