@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
 import { Button, Form, ProgressBar } from "react-bootstrap";
 import Util from "../Util/Util";
-// import socketIOClient from "socket.io-client";
-// const ENDPOINT = "https://iboardstream.herokuapp.com/";
+import socketIOClient from "socket.io-client";
 var axios = require('axios');
 
 class IBoard extends Component {
@@ -12,6 +11,8 @@ class IBoard extends Component {
         this.changeUniqueId = this.changeUniqueId.bind(this);
         this.changeText = this.changeText.bind(this);
         this.identifier = Util.identifier;
+        this.socketEndpoint = Util.socketEndpoint;
+        this.socket = socketIOClient();
     }
     changeUniqueId(event) {
         this.setState({ uniqueId: event.target.value, autoPublish: false });
@@ -38,13 +39,6 @@ class IBoard extends Component {
     }
     componentDidMount() {
         Util.awakeEndpoint();
-        // const socket = socketIOClient(ENDPOINT);
-        // socket.on("FromAPI", data => {
-        //     socket.emit("uniqueId", {
-        //         uniqueId: "Vrushank123"
-        //     });
-        //     console.log(data);
-        // });
     }
     getData = () => {
         if (!this.state.uniqueId) return;
@@ -99,13 +93,22 @@ class IBoard extends Component {
             this.setState({ text: "" });
         }
     }
-    startReloading() {
+    reloader() {
+        if (!this.state.autoReload) {
+            this.socket.close();
+            return;
+        }
+        this.socket = socketIOClient(this.socketEndpoint);
+        this.socket.on("respondData", data => {
+            this.setState({ text: data });
+        });
         setInterval(() => {
             if (this.state.autoReload) {
-                this.getData();
+                this.socket.emit("getUniqueId", this.state.uniqueId, /*dataFromServer => {}*/);
                 return;
             }
-        }, 300);
+            this.socket.close();
+        }, 1000);
     }
     enableAutoPublish = () => {
         this.getData();
@@ -120,7 +123,7 @@ class IBoard extends Component {
             autoReload: this.state.uniqueId ? !this.state.autoReload : false, autoPublish: false,
             isPublishDisabled: this.state.uniqueId ? !this.state.autoReload : false,
             isLoadDisabled: this.state.uniqueId ? !this.state.autoReload : false
-        }, this.startReloading);
+        }, this.reloader);
     }
     render() {
         const textAreaStyle = { border: "1px solid black" }
