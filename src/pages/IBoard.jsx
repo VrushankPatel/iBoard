@@ -108,7 +108,10 @@ class IBoard extends Component {
                 return;
             }
             this.socket.close();
-        }, 1000);
+        }, 100);
+        // while (this.state.autoReload) {
+        //     this.getData();
+        // }
     }
     enableAutoPublish = () => {
         this.getData();
