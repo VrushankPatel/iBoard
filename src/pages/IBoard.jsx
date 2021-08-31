@@ -19,25 +19,14 @@ class IBoard extends Component {
     }
     changeText(event) {
         this.setState({ text: event.target.value }, () => {
-            if (this.state.autoPublish) {
-                const publishData = () => { this.publishData() };
-                if (this.state.typingTimeout) {
-                    clearTimeout(this.state.typingTimeout);
-                }
-
-                this.setState({
-                    name: event.target.value,
-                    typing: false,
-                    typingTimeout: setTimeout(() => {
-                        if (this.state.autoPublish) {
-                            publishData();
-                        }
-                    }, 50)
-                });
-            }
+            this.socket.on("respondData", data => {
+                this.setState({ text: data });
+            });
+            this.socket.emit("publishData", [this.state.uniqueId, this.state.text], /*dataFromServer => {}*/);
         });
     }
     componentDidMount() {
+        this.socket = socketIOClient(this.socketEndpoint);
         Util.awakeEndpoint();
     }
     getData = () => {
@@ -95,23 +84,17 @@ class IBoard extends Component {
     }
     reloader() {
         if (!this.state.autoReload) {
-            this.socket.close();
             return;
         }
-        this.socket = socketIOClient(this.socketEndpoint);
         this.socket.on("respondData", data => {
             this.setState({ text: data });
         });
         setInterval(() => {
             if (this.state.autoReload) {
-                this.socket.emit("getUniqueId", this.state.uniqueId, /*dataFromServer => {}*/);
+                this.socket.emit("getDataFromUniqueId", this.state.uniqueId, /*dataFromServer => {}*/);
                 return;
             }
-            this.socket.close();
-        }, 100);
-        // while (this.state.autoReload) {
-        //     this.getData();
-        // }
+        }, 10);
     }
     enableAutoPublish = () => {
         this.getData();
