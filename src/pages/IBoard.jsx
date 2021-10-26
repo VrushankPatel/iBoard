@@ -18,11 +18,13 @@ class IBoard extends Component {
         this.setState({ uniqueId: event.target.value, autoPublish: false });
     }
     changeText(event) {
-        this.setState({ text: event.target.value }, () => {
-            this.socket.on("respondData", data => {
-                this.setState({ text: data });
-            });
-            this.socket.emit("publishData", [this.state.uniqueId, this.state.text], /*dataFromServer => {}*/);
+        this.setState({ text: event.target.value, isTextDisabled: false }, () => {
+            if (this.state.autoPublish) {
+                this.socket.on("respondData", data => {
+                    this.setState({ text: data });
+                });
+                this.socket.emit("publishData", [this.state.uniqueId, this.state.text], /*dataFromServer => {}*/);
+            }
         });
     }
     componentDidMount() {
