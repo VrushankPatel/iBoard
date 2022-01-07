@@ -10,10 +10,25 @@ class IBoard extends Component {
         this.state = { text: "", uniqueId: "", isLoadDisabled: false, isPublishDisabled: false, isInProgress: false, autoPublish: false, autoReload: false, name: '', typing: false, typingTimeout: 0, reloadTimeout: 0, isTextDisabled: false };
         this.changeUniqueId = this.changeUniqueId.bind(this);
         this.changeText = this.changeText.bind(this);
+        this.escFunction = this.shortcutsTrigger.bind(this);
         this.identifier = Util.identifier;
         this.socketEndpoint = Util.socketEndpoint;
-        this.socket = socketIOClient();
+        this.socket = socketIOClient();        
     }
+    shortcutsTrigger = (event) => {
+        let charCode = String.fromCharCode(event.which).toLowerCase();        
+        if((event.ctrlKey || event.metaKey) && charCode === 's') {
+            event.preventDefault();
+            this.publishData();
+        }
+        if((event.ctrlKey || event.metaKey) && charCode === 'c') {
+            Util.copyToClipBoard(this.state.text);
+        }
+        if(event.key === 'Escape'){
+            this.clearFields();
+        }
+      }
+    
     changeUniqueId(event) {
         this.setState({ uniqueId: event.target.value, autoPublish: false });
     }
@@ -28,9 +43,13 @@ class IBoard extends Component {
         });
     }
     componentDidMount() {
-        this.socket = socketIOClient(this.socketEndpoint);
+        document.addEventListener("keydown", this.shortcutsTrigger, false);
+        this.socket = socketIOClient(this.socketEndpoint);        
         Util.awakeEndpoint();
     }
+    componentWillUnmount(){
+        document.removeEventListener("keydown", this.shortcutsTrigger, false);
+      }
     getData = () => {
         if (!this.state.uniqueId) return;
         this.setState({ isLoadDisabled: true, isInProgress: this.state.autoReload ? false : true, isTextDisabled: true });
@@ -81,7 +100,7 @@ class IBoard extends Component {
     }
     clearFields() {
         if (!this.state.autoPublish && !this.state.autoReload) {
-            this.setState({ text: "" });
+            this.setState({ text: "", uniqueId: "" });
         }
     }
     reloader() {
@@ -127,12 +146,6 @@ class IBoard extends Component {
                         <div className="float-left pt-1">
                             <Button variant="info" size="sm" onClick={this.getData} disabled={this.state.isLoadDisabled || this.state.autoReload}>Load</Button>{" "}
                             <Button variant="success" size="sm" onClick={this.publishData} disabled={this.state.isPublishDisabled}>Publish</Button>{" "}
-                            <Button size="sm" variant="warning font-weight-bold" onClick={() => this.clearFields()} >
-                                Clear
-                            </Button>{" "}
-                            <Button size="sm" variant="outline-info font-weight-bold" onClick={() => Util.copyToClipBoard(this.state.text)} >
-                                Copy
-                            </Button>{" "}
                             <Button size="sm" variant="outline-dark font-weight-bold" onClick={this.enableAutoPublish} >
                                 Auto Publish : {this.state.autoPublish ? "On" : "Off"}
                             </Button> {" "}
