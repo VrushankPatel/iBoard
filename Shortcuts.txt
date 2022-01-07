@@ -1,0 +1,2 @@
+Ctrl + s to publish
+Escape to clear fields
