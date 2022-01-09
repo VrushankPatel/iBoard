@@ -7,7 +7,21 @@ var axios = require('axios');
 class IBoard extends Component {
     constructor(props) {
         super(props);
-        this.state = { text: "", uniqueId: "", isLoadDisabled: false, isPublishDisabled: false, isInProgress: false, autoPublish: false, autoReload: false, name: '', typing: false, typingTimeout: 0, reloadTimeout: 0, isTextDisabled: false };
+        this.state = { 
+            text: "", 
+            uniqueId: "", 
+            isLoadDisabled: false, 
+            isPublishDisabled: false, 
+            isInProgress: false, 
+            autoPublish: false, 
+            autoReload: false, 
+            name: '', 
+            typing: false, 
+            typingTimeout: 0, 
+            reloadTimeout: 0, 
+            isTextDisabled: false, 
+            terminal: ">",
+            statusColor: "white"};
         this.uniqueIdInput = React.createRef();  
         this.changeUniqueId = this.changeUniqueId.bind(this);
         this.changeText = this.changeText.bind(this);        
@@ -22,11 +36,6 @@ class IBoard extends Component {
         if((event.ctrlKey || event.metaKey) && charCode === 's') {
             event.preventDefault();
             this.publishData();
-        }
-        if((event.ctrlKey || event.metaKey) && charCode === 'c') {
-            if(document.activeElement === this.uniqueIdInput.current) return;
-            event.preventDefault();
-            Util.copyToClipBoard(this.state.text);
         }        
       }
     
@@ -52,9 +61,14 @@ class IBoard extends Component {
     componentWillUnmount(){
         document.removeEventListener("keydown", this.shortcutsTrigger, false);
       }
-    getData = () => {
-        if (!this.state.uniqueId) return;
-        this.setState({ isLoadDisabled: true, isInProgress: this.state.autoReload ? false : true, isTextDisabled: true });
+    getData = (isAutoPublishing) => {
+        if (!this.state.uniqueId) {
+            if (isAutoPublishing){
+                this.setState({terminal: "> no unique Id, please enter one", statusColor: "red"});
+            }
+            return;
+        }
+        this.setState({ isLoadDisabled: true, isInProgress: this.state.autoReload ? false : true, isTextDisabled: true, terminal: "> loading data..." });
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId })
         const config = {
             method: 'POST',
@@ -67,18 +81,23 @@ class IBoard extends Component {
             .then((response) => {
                 if (response.status === 204) {                    
                     this.setState({ isLoadDisabled: false, isTextDisabled: false });
-                }
-                this.setState({ text: response.data, isLoadDisabled: this.state.autoReload || this.state.autoPublish, isInProgress: false, isTextDisabled: false })
+                }                
+                const statusTerminalMsg = response.data.trim().length === 0 ? "> no data inserted" : "> loaded successfully";
+                const statusTerminalColor = response.data.trim().length === 0 ? "yellow" : "lightgreen";
+                this.setState({ text: response.data, isLoadDisabled: this.state.autoReload || this.state.autoPublish, isInProgress: false, isTextDisabled: false, terminal: isAutoPublishing === true ? "> auto publishing..." : statusTerminalMsg, statusColor : isAutoPublishing === true ? "lightgreen" : statusTerminalColor });                                
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
                 else alert("Error occured");
-                this.setState({ isPublishDisabled: false, isLoadDisabled: false, isInProgress: false, autoReload: false, isTextDisabled: false })
+                this.setState({ isPublishDisabled: false, isLoadDisabled: false, isInProgress: false, autoReload: false, isTextDisabled: false, terminal: "> error loading data", statusColor: "red", autoPublish: false })
             });
     }
     publishData = () => {
-        if (!this.state.uniqueId) return;
-        this.setState({ isPublishDisabled: true, isInProgress: this.state.autoPublish ? false : true });
+        if (!this.state.uniqueId) {
+            this.setState({terminal: "> no Unique Id, please enter one..", statusColor: "red"});
+            return;
+        }; 
+        this.setState({terminal: "> publishing..", statusColor: "lightgreen", isPublishDisabled: true, isInProgress: this.state.autoPublish ? false : true });
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId, "payLoad": this.state.text })
         const config = {
             method: 'POST',
@@ -91,21 +110,22 @@ class IBoard extends Component {
             .then((response) => {
                 // if (response.status === 202) alert("Updated data");
                 // if (response.status === 201) alert("Inserted data");
-                this.setState({ isPublishDisabled: this.state.autoPublish, isInProgress: false })
+                this.setState({ isPublishDisabled: this.state.autoPublish, isInProgress: false, terminal: "> published",   statusColor: "lightgreen" })
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
                 else alert("Error occured");
-                this.setState({ isPublishDisabled: false, isInProgress: false, autoPublish: false, isLoadDisabled: false })
+                this.setState({ isPublishDisabled: false, isInProgress: false, autoPublish: false, isLoadDisabled: false, terminal: "> failed to publish",  statusColor: "red" })
             });
     }
     clearFields() {
         if (!this.state.autoPublish && !this.state.autoReload) {
-            this.setState({ text: "", uniqueId: "" });
+            this.setState({ text: "", uniqueId: "", terminal: "> cleared all fields...", statusColor: "lightgreen" });
         }
     }
     reloader() {
-        if (!this.state.autoReload) {
+        if (!this.state.autoReload) {            
+            this.setState({terminal: this.state.uniqueId ? "> stopped auto reload" : "> no unique id, please enter one", statusColor: this.state.uniqueId ? "lightgreen" : "red"})
             return;
         }
         this.socket.on("respondData", data => {
@@ -119,7 +139,7 @@ class IBoard extends Component {
         }, 10);
     }
     enableAutoPublish = () => {
-        this.getData();
+        this.getData(!this.state.autoPublish);
         this.setState({
             autoPublish: this.state.uniqueId ? !this.state.autoPublish : false, autoReload: false,
             isPublishDisabled: this.state.uniqueId ? !this.state.autoPublish : false,
@@ -130,7 +150,9 @@ class IBoard extends Component {
         this.setState({
             autoReload: this.state.uniqueId ? !this.state.autoReload : false, autoPublish: false,
             isPublishDisabled: this.state.uniqueId ? !this.state.autoReload : false,
-            isLoadDisabled: this.state.uniqueId ? !this.state.autoReload : false
+            isLoadDisabled: this.state.uniqueId ? !this.state.autoReload : false,
+            terminal: this.state.uniqueId ? "> auto reloading..." : "> can't auto reload without unique id",
+            statusColor : this.state.uniqueId ? "lightgreen" : "red"
         }, this.reloader);
     }
     render() {
@@ -155,14 +177,38 @@ class IBoard extends Component {
 
                     <div className="col-6 float-left">
                         <div className="float-left pt-1">
-                            <Button size="sm" variant="info font-weight-bold" onClick={this.enableAutoPublish} >
+                            <Button variant="info" size="sm" onClick={this.getData} disabled={this.state.isLoadDisabled || this.state.autoReload}>Load</Button>{" "}
+                            <Button variant="success" title="Publish [Ctrl+S]" size="sm" onClick={this.publishData} disabled={this.state.isPublishDisabled}>Publish</Button>
+                            {" "}
+                            <Button size="sm" title="Clear [Esc]" variant="warning font-weight-bold" onClick={() => this.clearFields()} >
+                                Clear
+                            </Button>{" "}
+                            <Button size="sm" variant="outline-info font-weight-bold" onClick={() => {
+                                Util.copyToClipBoard(this.state.text);
+                                this.setState({terminal: this.state.text ? "> text copied to clipboard.." : "> nothing to copy.."});
+                                this.setState({statusColor: this.state.text ? "lightgreen" : "yellow"});
+                            }} >
+                                Copy
+                            </Button>{" "}
+                            <Button size="sm" variant="outline-dark font-weight-bold" onClick={this.enableAutoPublish} >
                                 Auto Publish : {this.state.autoPublish ? "On" : "Off"}
                             </Button> 
                             {" "}
-                            <Button size="sm" variant="success font-weight-bold" onClick={this.enableLiveReload}>
+                            <Button size="sm" variant="outline-dark font-weight-bold" onClick={this.enableLiveReload}>
                                 Live Reload : {this.state.autoReload ? "On" : "Off"}
-                            </Button>
+                            </Button>                            
                         </div>
+                    </div>
+                    <div className="col-3 float-left">
+                    <Form.Control                             
+                            type="text"
+                            value={this.state.terminal}
+                            onChange={this.changeUniqueId} 
+                            placeholder=">"                                                        
+                            disabled={true}
+                            style={{backgroundColor: "black",color : this.state.statusColor, fontWeight: "Bold"}}
+                            title="Status Terminal"
+                        />
                     </div>
                 </div>
                 <div className="row" style={progressBarStyle}>
