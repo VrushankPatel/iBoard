@@ -3,8 +3,8 @@
 // const socketEndPoint = "http://localhost:4001/";
 
 // PROD
-const encodedIdentifier1 = "aHR0cHM6Ly9jYXJuZWEuaGVyb2t1YXBwLmNvbS9pYm9hcmQ=";
-const encodedIdentifier2 = "aHR0cHM6Ly9jYXJuZWEuaGVyb2t1YXBwLmNvbS9pYm9hcmQy"
+const encodedIdentifier1 = "aHR0cHM6Ly9pYm9hcmR4Lmhlcm9rdWFwcC5jb20vYXBp";
+const encodedIdentifier2 = "aHR0cHM6Ly9pYm9hcmQtc2VydmVyMi5oZXJva3VhcHAuY29tL2FwaQ=="
 const socketEndPoint = "https://iboardx-streamer.herokuapp.com/";
 
 const getUrlByGMTFn = () => {
