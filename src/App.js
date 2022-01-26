@@ -1,4 +1,3 @@
-import DNavBar from './components/DNavBarX';
 import './App.css';
 import IBoard from "./pages/IBoard";
 import { useEffect } from 'react';
@@ -14,8 +13,7 @@ function App() {
   document.title = "iBoard";
   return (
     < Router >
-      <div className="App" >
-        <DNavBar page="dgIn" />
+      <div className="App" >        
         <Route exact path="/" >
           <IBoard />
         </Route>

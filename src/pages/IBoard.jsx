@@ -2,11 +2,15 @@ import React, { Component } from 'react'
 import { Button, Form, ProgressBar } from "react-bootstrap";
 import Util from "../Util/Util";
 import socketIOClient from "socket.io-client";
+import { Navbar, Nav } from "react-bootstrap";
 var axios = require('axios');
 
 class IBoard extends Component {
     constructor(props) {
         super(props);
+        if(localStorage.darkMode == null){
+            localStorage.darkMode = false;
+        }        
         this.state = { 
             text: "", 
             uniqueId: "", 
@@ -21,7 +25,12 @@ class IBoard extends Component {
             reloadTimeout: 0, 
             isTextDisabled: false, 
             terminal: ">",
-            statusColor: "white"};
+            background: localStorage.darkMode === "true" ? "#343a40" : "white",
+            foreground: localStorage.darkMode === "true" ? "lightgrey" : "black",
+            themeButtonText: localStorage.darkMode === "true" ? "Light Mode" : "Dark Mode",
+            navbarTheme: localStorage.darkMode === "true" ? "dark" : "light",
+            statusColor: "white",
+        };
         this.uniqueIdInput = React.createRef();  
         this.changeUniqueId = this.changeUniqueId.bind(this);
         this.changeText = this.changeText.bind(this);        
@@ -156,11 +165,35 @@ class IBoard extends Component {
         }, this.reloader);
     }
     render() {
-        const textAreaStyle = { border: "1px solid black" }
+        const textAreaStyle = { 
+            border: "1px solid " + this.state.foreground, 
+            backgroundColor: this.state.background, 
+            color: this.state.foreground
+        }
         const progressBarStyle = { visibility: this.state.isInProgress ? "visible" : "hidden", display: this.state.isInProgress ? "block" : "none" };
         return (
             <div>
-                <div className="row">
+                <Navbar bg={this.state.navbarTheme} expand="md">
+                <Navbar.Brand
+                    href="/"
+                    style={{
+                        fontFamily: "Exo",
+                        fontSize: "XX-Large",
+                        color: this.state.foreground,
+                    }}                    
+                >
+                    iBoard
+                </Navbar.Brand>
+                <Navbar.Toggle aria-controls="basic-navbar-nav" />
+                <Navbar.Collapse id="basic-navbar-nav">
+                    <Nav className="mr-auto">
+                        <Nav.Link style={{color: this.state.foreground}}>
+                            Home
+                        </Nav.Link>
+                    </Nav>
+                </Navbar.Collapse>
+            </Navbar>
+                <div className="row" style={{backgroundColor: this.state.background}}>
                     <div className="col-3 pb-1" >
                         <Form.Control 
                             ref={this.uniqueIdInput}
@@ -171,6 +204,10 @@ class IBoard extends Component {
                             onKeyPress={(event) => {
                                 if (event.key === "Enter") this.getData();
                             }} 
+                            style={{
+                                backgroundColor: this.state.background,
+                                color: this.state.foreground
+                            }}
                             disabled={this.state.autoPublish || this.state.autoReload} 
                         />
                     </div>
@@ -190,12 +227,35 @@ class IBoard extends Component {
                             }} >
                                 Copy
                             </Button>{" "}
-                            <Button size="sm" variant="outline-dark font-weight-bold" onClick={this.enableAutoPublish} >
+                            <Button size="sm" variant="outline-info font-weight-bold" onClick={this.enableAutoPublish} >
                                 Auto Publish : {this.state.autoPublish ? "On" : "Off"}
                             </Button> 
                             {" "}
-                            <Button size="sm" variant="outline-dark font-weight-bold" onClick={this.enableLiveReload}>
+                            <Button size="sm" variant="outline-info font-weight-bold" onClick={this.enableLiveReload}>
                                 Live Reload : {this.state.autoReload ? "On" : "Off"}
+                            </Button>   
+                            {" "}   
+                            <Button size="sm" variant="outline-info font-weight-bold" 
+                            onClick={() => {
+                                if (localStorage.darkMode === "false"){
+                                    localStorage.darkMode = "true";
+                                    this.setState({
+                                        background: "#343a40",
+                                        foreground: "lightgrey",
+                                        themeButtonText: "Light Mode",
+                                        navbarTheme: "dark"
+                                    })    
+                                }else {
+                                    localStorage.darkMode = "false";
+                                    this.setState({
+                                        background: "white",
+                                        foreground: "black",
+                                        themeButtonText: "Dark Mode",
+                                        navbarTheme: "light"
+                                    })    
+                                }                                
+                            }}>
+                                {this.state.themeButtonText}
                             </Button>                            
                         </div>
                     </div>
@@ -206,7 +266,11 @@ class IBoard extends Component {
                             onChange={this.changeUniqueId} 
                             placeholder=">"                                                        
                             disabled={true}
-                            style={{backgroundColor: "black",color : this.state.statusColor, fontWeight: "Bold"}}
+                            style={{
+                                backgroundColor: "black",
+                                color : this.state.statusColor, 
+                                fontWeight: "Bold"
+                            }}
                             title="Status Terminal"
                         />
                     </div>
