@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
-import { Button, Form, ProgressBar } from "react-bootstrap";
+import { Button, Form, ProgressBar, Navbar, Nav } from "react-bootstrap";
 import Util from "../Util/Util";
 import socketIOClient from "socket.io-client";
-import { Navbar, Nav } from "react-bootstrap";
 var axios = require('axios');
 
 class IBoard extends Component {
@@ -93,20 +92,52 @@ class IBoard extends Component {
                 }                
                 const statusTerminalMsg = response.data.trim().length === 0 ? "> no data inserted" : "> loaded successfully";
                 const statusTerminalColor = response.data.trim().length === 0 ? "yellow" : "lightgreen";
-                this.setState({ text: response.data, isLoadDisabled: this.state.autoReload || this.state.autoPublish, isInProgress: false, isTextDisabled: false, terminal: isAutoPublishing === true ? "> auto publishing..." : statusTerminalMsg, statusColor : isAutoPublishing === true ? "lightgreen" : statusTerminalColor });                                
+                const isLoadDisabled = this.state.autoReload || this.state.autoPublish;                
+                const terminalMsg = isAutoPublishing === true ? "> auto publishing..." : statusTerminalMsg;
+                const statusColor = isAutoPublishing === true ? "lightgreen" : statusTerminalColor;
+
+                this.setState({ 
+                    text: response.data, 
+                    isLoadDisabled: isLoadDisabled, 
+                    isInProgress: false, 
+                    isTextDisabled: false, 
+                    terminal: terminalMsg, 
+                    statusColor : statusColor 
+                });                                
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
                 else alert("Error occured");
-                this.setState({ isPublishDisabled: false, isLoadDisabled: false, isInProgress: false, autoReload: false, isTextDisabled: false, terminal: "> error loading data", statusColor: "red", autoPublish: false })
+                
+                this.setState({ 
+                    isPublishDisabled: false, 
+                    isLoadDisabled: false, 
+                    isInProgress: false, 
+                    autoReload: false, 
+                    isTextDisabled: false, 
+                    terminal: "> error loading data", 
+                    statusColor: "red", 
+                    autoPublish: false 
+                })
             });
     }
     publishData = () => {
         if (!this.state.uniqueId) {
-            this.setState({terminal: "> no Unique Id, please enter one..", statusColor: "red"});
+            this.setState({
+                terminal: "> no Unique Id, please enter one..", 
+                statusColor: "red"
+            });
             return;
-        }; 
-        this.setState({terminal: "> publishing..", statusColor: "lightgreen", isPublishDisabled: true, isInProgress: this.state.autoPublish ? false : true });
+        }
+
+        const isInProgress = this.state.autoPublish ? false : true;
+        this.setState({
+            terminal: "> publishing..", 
+            statusColor: "lightgreen", 
+            isPublishDisabled: true, 
+            isInProgress: isInProgress 
+        });
+
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId, "payLoad": this.state.text })
         const config = {
             method: 'POST',
@@ -116,15 +147,25 @@ class IBoard extends Component {
         };
 
         axios(config)
-            .then((response) => {
-                // if (response.status === 202) alert("Updated data");
-                // if (response.status === 201) alert("Inserted data");
-                this.setState({ isPublishDisabled: this.state.autoPublish, isInProgress: false, terminal: "> published",   statusColor: "lightgreen" })
+            .then((response) => {                
+                this.setState({ 
+                    isPublishDisabled: this.state.autoPublish, 
+                    isInProgress: false, 
+                    terminal: "> published",   
+                    statusColor: "lightgreen" 
+                })
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
                 else alert("Error occured");
-                this.setState({ isPublishDisabled: false, isInProgress: false, autoPublish: false, isLoadDisabled: false, terminal: "> failed to publish",  statusColor: "red" })
+                this.setState({ 
+                    isPublishDisabled: false, 
+                    isInProgress: false, 
+                    autoPublish: false, 
+                    isLoadDisabled: false, 
+                    terminal: "> failed to publish",  
+                    statusColor: "red" 
+                });
             });
     }
     clearFields() {
@@ -142,8 +183,7 @@ class IBoard extends Component {
         });
         setInterval(() => {
             if (this.state.autoReload) {
-                this.socket.emit("getDataFromUniqueId", this.state.uniqueId, /*dataFromServer => {}*/);
-                return;
+                this.socket.emit("getDataFromUniqueId", this.state.uniqueId, /*dataFromServer => {}*/);           
             }
         }, 10);
     }
