@@ -29,7 +29,8 @@ const util = {
         el.value = text;
         document.body.appendChild(el);
         el.select();
-        document.execCommand('copy');
+        el.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(el.value);
         document.body.removeChild(el);
     }
 };
