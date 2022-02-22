@@ -105,7 +105,7 @@ class IBoard extends Component {
                 const isDataInserted = response.data.trim().length === 0;
 
                 const statusTerminalMsg = isDataInserted ? "> no data inserted" : "> loaded successfully";
-                const statusTerminalColor = isDataInserted === 0 ? "yellow" : "lightgreen";
+                const statusTerminalColor = isDataInserted ? "yellow" : "lightgreen";
 
                 const isLoadDisabled = this.state.autoReload || this.state.autoPublish;
                 const terminalMsg = isAutoPublishing ? "> auto publishing..." : statusTerminalMsg;
