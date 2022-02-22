@@ -219,13 +219,52 @@ class IBoard extends Component {
             statusColor : this.state.uniqueId ? "lightgreen" : "red"
         }, this.reloader);
     }
+
+    getDataIfEnterKeyPressed = (event) => {
+        if (event.key === "Enter") this.getData();
+    }
+
+    copyDataToClipBoard = () => {
+        Util.copyToClipBoard(this.state.text);
+        this.setState({terminal: this.state.text ? "> text copied to clipboard.." : "> nothing to copy.."});
+        this.setState({statusColor: this.state.text ? "lightgreen" : "yellow"});
+    }
+
+    toggleTheme = () => {
+        if (localStorage.darkMode === "false"){
+            localStorage.darkMode = "true";
+            this.setState({
+                background: "#343a40",
+                foreground: "lightgrey",
+                themeButtonText: "Light Mode",
+                navbarTheme: "dark"
+            })    
+        }else {
+            localStorage.darkMode = "false";
+            this.setState({
+                background: "white",
+                foreground: "black",
+                themeButtonText: "Dark Mode",
+                navbarTheme: "light"
+            })    
+        }                                
+    }
+
     render() {
         const textAreaStyle = { 
             border: "1px solid " + this.state.foreground, 
             backgroundColor: this.state.background, 
             color: this.state.foreground
         }
-        const progressBarStyle = { visibility: this.state.isInProgress ? "visible" : "hidden", display: this.state.isInProgress ? "block" : "none" };
+
+        const visibility = this.state.isInProgress ? "visible" : "hidden";
+        const display = this.state.isInProgress ? "block" : "none";
+
+        const progressBarStyle = {
+            visibility: visibility,
+            display: display
+        };
+
         return (
             <div>
                 <Navbar bg={this.state.navbarTheme} expand="md">
@@ -256,9 +295,7 @@ class IBoard extends Component {
                             value={this.state.uniqueId} 
                             onChange={this.changeUniqueId} 
                             placeholder="Enter Unique ID" 
-                            onKeyPress={(event) => {
-                                if (event.key === "Enter") this.getData();
-                            }} 
+                            onKeyPress={this.getDataIfEnterKeyPressed} 
                             style={{
                                 backgroundColor: this.state.background,
                                 color: this.state.foreground
@@ -269,47 +306,55 @@ class IBoard extends Component {
 
                     <div className="col-6 float-left">
                         <div className="float-left pt-1">
-                            <Button variant="info" size="sm" onClick={this.getData} disabled={this.state.isLoadDisabled || this.state.autoReload}>Load</Button>{" "}
-                            <Button variant="success" title="Publish [Ctrl+S]" size="sm" onClick={this.publishData} disabled={this.state.isPublishDisabled}>Publish</Button>
+                            <Button 
+                                variant="info" 
+                                size="sm" 
+                                onClick={this.getData} 
+                                disabled={this.state.isLoadDisabled || this.state.autoReload}>
+                                    Load
+                            </Button>
                             {" "}
-                            <Button size="sm" title="Clear [Esc]" variant="warning font-weight-bold" onClick={() => this.clearFields()} >
+                            <Button 
+                                variant="success" 
+                                title="Publish [Ctrl+S]" 
+                                size="sm" 
+                                onClick={this.publishData} 
+                                disabled={this.state.isPublishDisabled}>
+                                    Publish
+                            </Button>
+                            {" "}
+                            <Button 
+                                size="sm" 
+                                title="Clear [Esc]" 
+                                variant="warning font-weight-bold" 
+                                onClick={() => this.clearFields()} >
                                 Clear
                             </Button>{" "}
-                            <Button size="sm" variant="outline-info font-weight-bold" onClick={() => {
-                                Util.copyToClipBoard(this.state.text);
-                                this.setState({terminal: this.state.text ? "> text copied to clipboard.." : "> nothing to copy.."});
-                                this.setState({statusColor: this.state.text ? "lightgreen" : "yellow"});
-                            }} >
+                            <Button 
+                                size="sm" 
+                                variant="outline-info font-weight-bold" 
+                                onClick={this.copyDataToClipBoard} >
                                 Copy
-                            </Button>{" "}
-                            <Button size="sm" variant="outline-info font-weight-bold" onClick={this.enableAutoPublish} >
-                                Auto Publish : {this.state.autoPublish ? "On" : "Off"}
-                            </Button> 
+                            </Button>
                             {" "}
-                            <Button size="sm" variant="outline-info font-weight-bold" onClick={this.enableLiveReload}>
+                            <Button 
+                                size="sm" 
+                                variant="outline-info font-weight-bold" 
+                                onClick={this.enableAutoPublish}>
+                                Auto Publish : {this.state.autoPublish ? "On" : "Off"}
+                            </Button>
+                            {" "}
+                            <Button
+                                size="sm" 
+                                variant="outline-info font-weight-bold" 
+                                onClick={this.enableLiveReload}>
                                 Live Reload : {this.state.autoReload ? "On" : "Off"}
-                            </Button>   
+                            </Button>
                             {" "}   
-                            <Button size="sm" variant="outline-info font-weight-bold" 
-                            onClick={() => {
-                                if (localStorage.darkMode === "false"){
-                                    localStorage.darkMode = "true";
-                                    this.setState({
-                                        background: "#343a40",
-                                        foreground: "lightgrey",
-                                        themeButtonText: "Light Mode",
-                                        navbarTheme: "dark"
-                                    })    
-                                }else {
-                                    localStorage.darkMode = "false";
-                                    this.setState({
-                                        background: "white",
-                                        foreground: "black",
-                                        themeButtonText: "Dark Mode",
-                                        navbarTheme: "light"
-                                    })    
-                                }                                
-                            }}>
+                            <Button 
+                                size="sm"
+                                variant="outline-info font-weight-bold"
+                                onClick={this.toggleTheme}>
                                 {this.state.themeButtonText}
                             </Button>                            
                         </div>
