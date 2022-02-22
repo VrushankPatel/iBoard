@@ -68,7 +68,7 @@ class IBoard extends Component {
     }
     componentWillUnmount(){
         document.removeEventListener("keydown", this.shortcutsTrigger, false);
-      }
+    }
     getData = (isAutoPublishing) => {
         if (!this.state.uniqueId) {
             if (isAutoPublishing){
@@ -76,7 +76,16 @@ class IBoard extends Component {
             }
             return;
         }
-        this.setState({ isLoadDisabled: true, isInProgress: this.state.autoReload ? false : true, isTextDisabled: true, terminal: "> loading data..." });
+        
+        const isInProgress = !this.state.autoReload;
+        
+        this.setState({ 
+            isLoadDisabled: true, 
+            isInProgress: isInProgress, 
+            isTextDisabled: true, 
+            terminal: "> loading data..." 
+        });
+
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId })
         const config = {
             method: 'POST',
@@ -87,14 +96,20 @@ class IBoard extends Component {
 
         axios(config)
             .then((response) => {
-                if (response.status === 204) {                    
-                    this.setState({ isLoadDisabled: false, isTextDisabled: false });
-                }                
-                const statusTerminalMsg = response.data.trim().length === 0 ? "> no data inserted" : "> loaded successfully";
-                const statusTerminalColor = response.data.trim().length === 0 ? "yellow" : "lightgreen";
-                const isLoadDisabled = this.state.autoReload || this.state.autoPublish;                
-                const terminalMsg = isAutoPublishing === true ? "> auto publishing..." : statusTerminalMsg;
-                const statusColor = isAutoPublishing === true ? "lightgreen" : statusTerminalColor;
+                const resultBool = response.status === 204;
+                this.setState({ 
+                    isLoadDisabled: !resultBool,
+                    isTextDisabled: !resultBool
+                });
+
+                const isDataInserted = response.data.trim().length === 0;
+
+                const statusTerminalMsg = isDataInserted ? "> no data inserted" : "> loaded successfully";
+                const statusTerminalColor = isDataInserted === 0 ? "yellow" : "lightgreen";
+
+                const isLoadDisabled = this.state.autoReload || this.state.autoPublish;
+                const terminalMsg = isAutoPublishing ? "> auto publishing..." : statusTerminalMsg;
+                const statusColor = isAutoPublishing ? "lightgreen" : statusTerminalColor;
 
                 this.setState({ 
                     text: response.data, 
