@@ -63,8 +63,14 @@ class IBoard extends Component {
     componentDidMount() {
         this.uniqueIdInput.current.focus();
         document.addEventListener("keydown", this.shortcutsTrigger, false);
-        this.socket = socketIOClient(this.socketEndpoint);        
+        this.socket = socketIOClient(this.socketEndpoint);
         Util.awakeEndpoint();
+        let uId = localStorage.uid;
+        if(uId !== undefined){
+            this.setState({uniqueId: uId}, () => {
+                this.getData();
+            });
+        }
     }
     componentWillUnmount(){
         document.removeEventListener("keydown", this.shortcutsTrigger, false);
@@ -166,9 +172,10 @@ class IBoard extends Component {
                 this.setState({ 
                     isPublishDisabled: this.state.autoPublish, 
                     isInProgress: false, 
-                    terminal: "> published",   
+                    terminal: "> published, and copied info to Clipboard",   
                     statusColor: "lightgreen" 
-                })
+                });
+                this.copyTextToClipBoard(window.location.href + "byId/" + this.state.uniqueId);
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
@@ -230,6 +237,10 @@ class IBoard extends Component {
         this.setState({statusColor: this.state.text ? "lightgreen" : "yellow"});
     }
 
+    copyTextToClipBoard = (text) => {
+        Util.copyToClipBoard(text);
+    }
+
     toggleTheme = () => {
         if (localStorage.darkMode === "false"){
             localStorage.darkMode = "true";
@@ -274,7 +285,7 @@ class IBoard extends Component {
                         fontFamily: "Exo",
                         fontSize: "XX-Large",
                         color: this.state.foreground,
-                    }}                    
+                    }}
                 >
                     iBoard
                 </Navbar.Brand>
@@ -283,6 +294,9 @@ class IBoard extends Component {
                     <Nav className="mr-auto">
                         <Nav.Link style={{color: this.state.foreground}}>
                             Home
+                        </Nav.Link>
+                        <Nav.Link style={{color: this.state.foreground}} href="/About" >
+                            About
                         </Nav.Link>
                     </Nav>
                 </Navbar.Collapse>
@@ -309,7 +323,9 @@ class IBoard extends Component {
                             <Button 
                                 variant="info" 
                                 size="sm" 
-                                onClick={this.getData} 
+                                onClick={() => {
+                                    this.getData();
+                                }} 
                                 disabled={this.state.isLoadDisabled || this.state.autoReload}>
                                     Load
                             </Button>
@@ -318,7 +334,9 @@ class IBoard extends Component {
                                 variant="success" 
                                 title="Publish [Ctrl+S]" 
                                 size="sm" 
-                                onClick={this.publishData} 
+                                onClick={() => {
+                                    this.publishData();
+                                }} 
                                 disabled={this.state.isPublishDisabled}>
                                     Publish
                             </Button>
