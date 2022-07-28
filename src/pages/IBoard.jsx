@@ -2,7 +2,11 @@ import React, { Component } from 'react'
 import { Button, Form, ProgressBar, Navbar, Nav } from "react-bootstrap";
 import Util from "../Util/Util";
 import socketIOClient from "socket.io-client";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons'
+
 var axios = require('axios');
+
 
 class IBoard extends Component {
     constructor(props) {
@@ -26,7 +30,7 @@ class IBoard extends Component {
             terminal: ">",
             background: localStorage.darkMode === "true" ? "#343a40" : "white",
             foreground: localStorage.darkMode === "true" ? "lightgrey" : "black",
-            themeButtonText: localStorage.darkMode === "true" ? "Light Mode" : "Dark Mode",
+            themeButtonText: localStorage.darkMode === "true" ? <FontAwesomeIcon icon={faSun} /> : <FontAwesomeIcon icon={faMoon} />,
             navbarTheme: localStorage.darkMode === "true" ? "dark" : "light",
             statusColor: "white",
         };
@@ -172,7 +176,7 @@ class IBoard extends Component {
                 this.setState({ 
                     isPublishDisabled: this.state.autoPublish, 
                     isInProgress: false, 
-                    terminal: "> published, and copied info to Clipboard",   
+                    terminal: "> published, and copied link to Clipboard",   
                     statusColor: "lightgreen" 
                 });
                 this.copyTextToClipBoard(window.location.href + "byId/" + this.state.uniqueId);
@@ -241,13 +245,18 @@ class IBoard extends Component {
         Util.copyToClipBoard(text);
     }
 
+    copyTextToClipBoard2 = (text) => {
+        Util.copyToClipBoard(text);
+        this.setState({terminal: "> Link to this iBoard copied to clipboard"});
+    }
+
     toggleTheme = () => {
         if (localStorage.darkMode === "false"){
             localStorage.darkMode = "true";
             this.setState({
                 background: "#343a40",
                 foreground: "lightgrey",
-                themeButtonText: "Light Mode",
+                themeButtonText: <FontAwesomeIcon icon={faSun} />,
                 navbarTheme: "dark"
             })    
         }else {
@@ -255,7 +264,7 @@ class IBoard extends Component {
             this.setState({
                 background: "white",
                 foreground: "black",
-                themeButtonText: "Dark Mode",
+                themeButtonText: <FontAwesomeIcon icon={faMoon} />,
                 navbarTheme: "light"
             })    
         }                                
@@ -275,6 +284,10 @@ class IBoard extends Component {
             visibility: visibility,
             display: display
         };
+
+        const roundedButton = {
+            borderRadius: "100px"
+        }
 
         return (
             <div>
@@ -321,6 +334,7 @@ class IBoard extends Component {
                     <div className="col-6 float-left">
                         <div className="float-left pt-1">
                             <Button 
+                                style = {roundedButton} 
                                 variant="info" 
                                 size="sm" 
                                 onClick={() => {
@@ -331,6 +345,7 @@ class IBoard extends Component {
                             </Button>
                             {" "}
                             <Button 
+                                style = {roundedButton} 
                                 variant="success" 
                                 title="Publish [Ctrl+S]" 
                                 size="sm" 
@@ -342,6 +357,7 @@ class IBoard extends Component {
                             </Button>
                             {" "}
                             <Button 
+                                style = {roundedButton} 
                                 size="sm" 
                                 title="Clear [Esc]" 
                                 variant="warning font-weight-bold" 
@@ -349,13 +365,25 @@ class IBoard extends Component {
                                 Clear
                             </Button>{" "}
                             <Button 
+                                style = {roundedButton} 
                                 size="sm" 
                                 variant="outline-info font-weight-bold" 
                                 onClick={this.copyDataToClipBoard} >
-                                Copy
+                                Copy Data
                             </Button>
                             {" "}
                             <Button 
+                                style = {roundedButton} 
+                                size="sm" 
+                                variant="outline-info font-weight-bold" 
+                                onClick={() => {
+                                    this.copyTextToClipBoard2(window.location.href + "byId/" + this.state.uniqueId);
+                                }} >
+                                Copy Link
+                            </Button>
+                            {" "}
+                            <Button 
+                                style = {roundedButton} 
                                 size="sm" 
                                 variant="outline-info font-weight-bold" 
                                 onClick={this.enableAutoPublish}>
@@ -363,6 +391,7 @@ class IBoard extends Component {
                             </Button>
                             {" "}
                             <Button
+                                style = {roundedButton} 
                                 size="sm" 
                                 variant="outline-info font-weight-bold" 
                                 onClick={this.enableLiveReload}>
@@ -370,6 +399,7 @@ class IBoard extends Component {
                             </Button>
                             {" "}   
                             <Button 
+                                style = {roundedButton} 
                                 size="sm"
                                 variant="outline-info font-weight-bold"
                                 onClick={this.toggleTheme}>
@@ -387,7 +417,8 @@ class IBoard extends Component {
                             style={{
                                 backgroundColor: "black",
                                 color : this.state.statusColor, 
-                                fontWeight: "Bold"
+                                fontWeight: "Bold",
+                                borderRadius: "100px"
                             }}
                             title="Status Terminal"
                         />
