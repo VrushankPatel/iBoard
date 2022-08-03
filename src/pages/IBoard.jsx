@@ -3,7 +3,8 @@ import { Button, Form, ProgressBar, Navbar, Nav } from "react-bootstrap";
 import Util from "../Util/Util";
 import socketIOClient from "socket.io-client";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons'
+import { faSun, faMoon, faArrowDown, faArrowUp, faBroom, faCopy, faLink } from '@fortawesome/free-solid-svg-icons'
+import ReactTooltip from 'react-tooltip';
 
 var axios = require('axios');
 
@@ -13,20 +14,20 @@ class IBoard extends Component {
         super(props);
         if(localStorage.darkMode == null){
             localStorage.darkMode = false;
-        }        
-        this.state = { 
-            text: "", 
-            uniqueId: "", 
-            isLoadDisabled: false, 
-            isPublishDisabled: false, 
-            isInProgress: false, 
-            autoPublish: false, 
-            autoReload: false, 
-            name: '', 
-            typing: false, 
-            typingTimeout: 0, 
-            reloadTimeout: 0, 
-            isTextDisabled: false, 
+        }
+        this.state = {
+            text: "",
+            uniqueId: "",
+            isLoadDisabled: false,
+            isPublishDisabled: false,
+            isInProgress: false,
+            autoPublish: false,
+            autoReload: false,
+            name: '',
+            typing: false,
+            typingTimeout: 0,
+            reloadTimeout: 0,
+            isTextDisabled: false,
             terminal: ">",
             background: localStorage.darkMode === "true" ? "#343a40" : "white",
             foreground: localStorage.darkMode === "true" ? "lightgrey" : "black",
@@ -34,23 +35,23 @@ class IBoard extends Component {
             navbarTheme: localStorage.darkMode === "true" ? "dark" : "light",
             statusColor: "white",
         };
-        this.uniqueIdInput = React.createRef();  
+        this.uniqueIdInput = React.createRef();
         this.changeUniqueId = this.changeUniqueId.bind(this);
-        this.changeText = this.changeText.bind(this);        
+        this.changeText = this.changeText.bind(this);
         this.identifier = Util.identifier;
         this.socketEndpoint = Util.socketEndpoint;
-        this.socket = socketIOClient();        
+        this.socket = socketIOClient();
     }
-    
-    shortcutsTrigger = (event) => {        
+
+    shortcutsTrigger = (event) => {
         if(event.key === 'Escape') this.clearFields();
-        let charCode = String.fromCharCode(event.which).toLowerCase();        
+        let charCode = String.fromCharCode(event.which).toLowerCase();
         if((event.ctrlKey || event.metaKey) && charCode === 's') {
             event.preventDefault();
             this.publishData();
-        }        
+        }
       }
-    
+
     changeUniqueId(event) {
         this.setState({ uniqueId: event.target.value, autoPublish: false });
     }
@@ -86,14 +87,14 @@ class IBoard extends Component {
             }
             return;
         }
-        
+
         const isInProgress = !this.state.autoReload;
-        
-        this.setState({ 
-            isLoadDisabled: true, 
-            isInProgress: isInProgress, 
-            isTextDisabled: true, 
-            terminal: "> loading data..." 
+
+        this.setState({
+            isLoadDisabled: true,
+            isInProgress: isInProgress,
+            isTextDisabled: true,
+            terminal: "> loading data..."
         });
 
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId })
@@ -107,7 +108,7 @@ class IBoard extends Component {
         axios(config)
             .then((response) => {
                 const resultBool = response.status === 204;
-                this.setState({ 
+                this.setState({
                     isLoadDisabled: !resultBool,
                     isTextDisabled: !resultBool
                 });
@@ -121,35 +122,35 @@ class IBoard extends Component {
                 const terminalMsg = isAutoPublishing ? "> auto publishing..." : statusTerminalMsg;
                 const statusColor = isAutoPublishing ? "lightgreen" : statusTerminalColor;
 
-                this.setState({ 
-                    text: response.data, 
-                    isLoadDisabled: isLoadDisabled, 
-                    isInProgress: false, 
-                    isTextDisabled: false, 
-                    terminal: terminalMsg, 
-                    statusColor : statusColor 
-                });                                
+                this.setState({
+                    text: response.data,
+                    isLoadDisabled: isLoadDisabled,
+                    isInProgress: false,
+                    isTextDisabled: false,
+                    terminal: terminalMsg,
+                    statusColor : statusColor
+                });
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
                 else alert("Error occured");
-                
-                this.setState({ 
-                    isPublishDisabled: false, 
-                    isLoadDisabled: false, 
-                    isInProgress: false, 
-                    autoReload: false, 
-                    isTextDisabled: false, 
-                    terminal: "> error loading data", 
-                    statusColor: "red", 
-                    autoPublish: false 
+
+                this.setState({
+                    isPublishDisabled: false,
+                    isLoadDisabled: false,
+                    isInProgress: false,
+                    autoReload: false,
+                    isTextDisabled: false,
+                    terminal: "> error loading data",
+                    statusColor: "red",
+                    autoPublish: false
                 })
             });
     }
     publishData = () => {
         if (!this.state.uniqueId) {
             this.setState({
-                terminal: "> no Unique Id, please enter one..", 
+                terminal: "> no Unique Id, please enter one..",
                 statusColor: "red"
             });
             return;
@@ -157,10 +158,10 @@ class IBoard extends Component {
 
         const isInProgress = this.state.autoPublish ? false : true;
         this.setState({
-            terminal: "> publishing..", 
-            statusColor: "lightgreen", 
-            isPublishDisabled: true, 
-            isInProgress: isInProgress 
+            terminal: "> publishing..",
+            statusColor: "lightgreen",
+            isPublishDisabled: true,
+            isInProgress: isInProgress
         });
 
         const data = JSON.stringify({ "uniqueId": this.state.uniqueId, "payLoad": this.state.text })
@@ -172,25 +173,25 @@ class IBoard extends Component {
         };
 
         axios(config)
-            .then((response) => {                
-                this.setState({ 
-                    isPublishDisabled: this.state.autoPublish, 
-                    isInProgress: false, 
-                    terminal: "> published, and copied link to Clipboard",   
-                    statusColor: "lightgreen" 
+            .then((response) => {
+                this.setState({
+                    isPublishDisabled: this.state.autoPublish,
+                    isInProgress: false,
+                    terminal: "> published, and copied link to Clipboard",
+                    statusColor: "lightgreen"
                 });
                 this.copyTextToClipBoard(window.location.href + "byId/" + this.state.uniqueId);
             })
             .catch((error) => {
                 if (!navigator.onLine) alert("No Internet, Please check your Connection!");
                 else alert("Error occured");
-                this.setState({ 
-                    isPublishDisabled: false, 
-                    isInProgress: false, 
-                    autoPublish: false, 
-                    isLoadDisabled: false, 
-                    terminal: "> failed to publish",  
-                    statusColor: "red" 
+                this.setState({
+                    isPublishDisabled: false,
+                    isInProgress: false,
+                    autoPublish: false,
+                    isLoadDisabled: false,
+                    terminal: "> failed to publish",
+                    statusColor: "red"
                 });
             });
     }
@@ -200,7 +201,7 @@ class IBoard extends Component {
         }
     }
     reloader() {
-        if (!this.state.autoReload) {            
+        if (!this.state.autoReload) {
             this.setState({terminal: this.state.uniqueId ? "> stopped auto reload" : "> no unique id, please enter one", statusColor: this.state.uniqueId ? "lightgreen" : "red"})
             return;
         }
@@ -209,7 +210,7 @@ class IBoard extends Component {
         });
         setInterval(() => {
             if (this.state.autoReload) {
-                this.socket.emit("getDataFromUniqueId", this.state.uniqueId, /*dataFromServer => {}*/);           
+                this.socket.emit("getDataFromUniqueId", this.state.uniqueId, /*dataFromServer => {}*/);
             }
         }, 10);
     }
@@ -258,7 +259,7 @@ class IBoard extends Component {
                 foreground: "lightgrey",
                 themeButtonText: <FontAwesomeIcon icon={faSun} />,
                 navbarTheme: "dark"
-            })    
+            })
         }else {
             localStorage.darkMode = "false";
             this.setState({
@@ -266,14 +267,14 @@ class IBoard extends Component {
                 foreground: "black",
                 themeButtonText: <FontAwesomeIcon icon={faMoon} />,
                 navbarTheme: "light"
-            })    
-        }                                
+            })
+        }
     }
 
     render() {
-        const textAreaStyle = { 
-            border: "1px solid " + this.state.foreground, 
-            backgroundColor: this.state.background, 
+        const textAreaStyle = {
+            border: "1px solid " + this.state.foreground,
+            backgroundColor: this.state.background,
             color: this.state.foreground
         }
 
@@ -284,10 +285,6 @@ class IBoard extends Component {
             visibility: visibility,
             display: display
         };
-
-        const roundedButton = {
-            borderRadius: "100px"
-        }
 
         return (
             <div>
@@ -316,109 +313,127 @@ class IBoard extends Component {
             </Navbar>
                 <div className="row" style={{backgroundColor: this.state.background}}>
                     <div className="col-3 pb-1" >
-                        <Form.Control 
+                        <Form.Control
                             ref={this.uniqueIdInput}
-                            type="text"                             
-                            value={this.state.uniqueId} 
-                            onChange={this.changeUniqueId} 
-                            placeholder="Enter Unique ID" 
-                            onKeyPress={this.getDataIfEnterKeyPressed} 
+                            type="text"
+                            value={this.state.uniqueId}
+                            onChange={this.changeUniqueId}
+                            placeholder="Enter Unique ID"
+                            onKeyPress={this.getDataIfEnterKeyPressed}
                             style={{
                                 backgroundColor: this.state.background,
                                 color: this.state.foreground
                             }}
-                            disabled={this.state.autoPublish || this.state.autoReload} 
+                            disabled={this.state.autoPublish || this.state.autoReload}
                         />
                     </div>
 
                     <div className="col-6 float-left">
                         <div className="float-left pt-1">
-                            <Button 
-                                style = {roundedButton} 
-                                variant="info" 
-                                size="sm" 
+                            <Button
+                                variant="info"
+                                size="sm"
+                                // title="Load (Reteieve content)"
+                                data-tip 
+                                data-for='load-btn'
                                 onClick={() => {
                                     this.getData();
-                                }} 
+                                }}
                                 disabled={this.state.isLoadDisabled || this.state.autoReload}>
-                                    Load
+                                    {" "}<FontAwesomeIcon icon={faArrowDown} />{" "}
                             </Button>
+                            <ReactTooltip id='load-btn' type='info'>
+                                <span>Load (Reteieve content)</span>
+                            </ReactTooltip>
                             {" "}
-                            <Button 
-                                style = {roundedButton} 
-                                variant="success" 
-                                title="Publish [Ctrl+S]" 
-                                size="sm" 
+                            <Button
+                                variant="success"
+                                size="sm"
+                                data-tip 
+                                data-for='publish-btn'
                                 onClick={() => {
                                     this.publishData();
-                                }} 
+                                }}
                                 disabled={this.state.isPublishDisabled}>
-                                    Publish
+                                    <FontAwesomeIcon icon={faArrowUp} />
                             </Button>
+                            <ReactTooltip id='publish-btn' type='success'>
+                                <span>Publish [Ctrl+S]</span>
+                            </ReactTooltip>
                             {" "}
-                            <Button 
-                                style = {roundedButton} 
-                                size="sm" 
-                                title="Clear [Esc]" 
-                                variant="warning font-weight-bold" 
+                            <Button
+                                size="sm"
+                                title="Clear [Esc]"
+                                data-tip 
+                                data-for='clear-btn'
+                                variant="warning font-weight-bold"
                                 onClick={() => this.clearFields()} >
-                                Clear
-                            </Button>{" "}
-                            <Button 
-                                style = {roundedButton} 
-                                size="sm" 
-                                variant="outline-info font-weight-bold" 
-                                onClick={this.copyDataToClipBoard} >
-                                Copy Data
+                                <FontAwesomeIcon icon={faBroom} />
                             </Button>
+                            <ReactTooltip id='clear-btn' type='warning'>
+                                <span>Clear All</span>
+                            </ReactTooltip>
                             {" "}
-                            <Button 
-                                style = {roundedButton} 
-                                size="sm" 
-                                variant="outline-info font-weight-bold" 
+                            <Button
+                                size="sm"
+                                variant="outline-info font-weight-bold"
+                                data-tip
+                                data-for='copy-data-btn'
+                                onClick={this.copyDataToClipBoard} >
+                                <FontAwesomeIcon icon={faCopy} />
+                            </Button>
+                            <ReactTooltip id='copy-data-btn'>
+                                <span>Copy data to clipboard</span>
+                            </ReactTooltip>
+                            {" "}
+                            <Button
+                                size="sm"
+                                variant="outline-info font-weight-bold"
+                                data-tip
+                                data-for='copy-link-btn'
                                 onClick={() => {
                                     this.copyTextToClipBoard2(window.location.href + "byId/" + this.state.uniqueId);
                                 }} >
-                                Copy Link
+                                <FontAwesomeIcon icon={faLink} />
                             </Button>
+                            <ReactTooltip id='copy-link-btn'>
+                                <span>Copy link to clipboard</span>
+                            </ReactTooltip>
                             {" "}
-                            <Button 
-                                style = {roundedButton} 
-                                size="sm" 
-                                variant="outline-info font-weight-bold" 
+                            <Button
+                                size="sm"
+                                variant="outline-info font-weight-bold"
                                 onClick={this.enableAutoPublish}>
                                 Auto Publish : {this.state.autoPublish ? "On" : "Off"}
                             </Button>
                             {" "}
                             <Button
-                                style = {roundedButton} 
-                                size="sm" 
-                                variant="outline-info font-weight-bold" 
+                                size="sm"
+                                variant="outline-info font-weight-bold"
                                 onClick={this.enableLiveReload}>
                                 Live Reload : {this.state.autoReload ? "On" : "Off"}
                             </Button>
-                            {" "}   
-                            <Button 
-                                style = {roundedButton} 
+                            {" "}
+                            <Button
                                 size="sm"
                                 variant="outline-info font-weight-bold"
                                 onClick={this.toggleTheme}>
                                 {this.state.themeButtonText}
-                            </Button>                            
+                            </Button>
                         </div>
                     </div>
                     <div className="col-3 float-left">
-                    <Form.Control                             
+                    <Form.Control
                             type="text"
                             value={this.state.terminal}
-                            onChange={this.changeUniqueId} 
-                            placeholder=">"                                                        
+                            onChange={this.changeUniqueId}
+                            placeholder=">"
                             disabled={true}
                             style={{
                                 backgroundColor: "black",
-                                color : this.state.statusColor, 
+                                color : this.state.statusColor,
                                 fontWeight: "Bold",
-                                borderRadius: "100px"
+
                             }}
                             title="Status Terminal"
                         />
@@ -434,14 +449,14 @@ class IBoard extends Component {
                     </div>
                 </div>
                 <Form.Group controlId="exampleForm.ControlTextarea1">
-                    <Form.Control 
-                        as="textarea" 
-                        placeholder="Your text will appear here" 
-                        style={textAreaStyle} 
-                        value={this.state.text} 
-                        onChange={this.changeText} 
-                        rows={50} 
-                        disabled={this.state.autoReload || this.state.isTextDisabled} 
+                    <Form.Control
+                        as="textarea"
+                        placeholder="Your text will appear here"
+                        style={textAreaStyle}
+                        value={this.state.text}
+                        onChange={this.changeText}
+                        rows={50}
+                        disabled={this.state.autoReload || this.state.isTextDisabled}
                          />
                 </Form.Group>
             </div >
