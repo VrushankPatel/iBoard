@@ -3,7 +3,7 @@ import { Button, Form, ProgressBar, Navbar, Nav } from "react-bootstrap";
 import Util from "../Util/Util";
 import socketIOClient from "socket.io-client";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon, faArrowDown, faArrowUp, faBroom, faCopy, faLink } from '@fortawesome/free-solid-svg-icons'
+import { faSun, faMoon, faArrowDown, faArrowUp, faBroom, faCopy, faLink, faBolt, faArrowsRotate } from '@fortawesome/free-solid-svg-icons'
 import ReactTooltip from 'react-tooltip';
 
 var axios = require('axios');
@@ -344,7 +344,7 @@ class IBoard extends Component {
                                 disabled={this.state.isLoadDisabled || this.state.autoReload}>
                                     {" "}<FontAwesomeIcon icon={faArrowDown} />{" "}
                             </Button>
-                            <ReactTooltip id='load-btn' type='info'>
+                            <ReactTooltip id='load-btn'>
                                 <span>Load (Reteieve content)</span>
                             </ReactTooltip>
                             {" "}
@@ -359,7 +359,7 @@ class IBoard extends Component {
                                 disabled={this.state.isPublishDisabled}>
                                     <FontAwesomeIcon icon={faArrowUp} />
                             </Button>
-                            <ReactTooltip id='publish-btn' type='success'>
+                            <ReactTooltip id='publish-btn'>
                                 <span>Publish [Ctrl+S]</span>
                             </ReactTooltip>
                             {" "}
@@ -372,7 +372,7 @@ class IBoard extends Component {
                                 onClick={() => this.clearFields()} >
                                 <FontAwesomeIcon icon={faBroom} />
                             </Button>
-                            <ReactTooltip id='clear-btn' type='warning'>
+                            <ReactTooltip id='clear-btn'>
                                 <span>Clear All</span>
                             </ReactTooltip>
                             {" "}
@@ -404,17 +404,30 @@ class IBoard extends Component {
                             {" "}
                             <Button
                                 size="sm"
-                                variant="outline-info font-weight-bold"
+                                variant={this.state.autoPublish ? "light font-weight-bold" : "outline-info font-weight-bold"}
+                                data-tip
+                                data-for='autoPublish'
                                 onClick={this.enableAutoPublish}>
-                                Auto Publish : {this.state.autoPublish ? "On" : "Off"}
+                                <FontAwesomeIcon icon={faBolt} /> {" "}
+                                <FontAwesomeIcon icon={faArrowUp} />
+                                {/* {this.state.autoPublish ? "On" : "Off"} */}
                             </Button>
+                            <ReactTooltip id='autoPublish'>
+                                <span>Auto publish</span>
+                            </ReactTooltip>
                             {" "}
                             <Button
                                 size="sm"
-                                variant="outline-info font-weight-bold"
+                                variant={this.state.autoReload ? "light font-weight-bold" : "outline-info font-weight-bold"}
+                                data-tip
+                                data-for='autoReload'
                                 onClick={this.enableLiveReload}>
-                                Live Reload : {this.state.autoReload ? "On" : "Off"}
+                                <FontAwesomeIcon icon={faArrowsRotate} /> 
+                                {/* {this.state.autoReload ? "On" : "Off"} */}
                             </Button>
+                            <ReactTooltip id='autoReload'>
+                                <span>Live Reload</span>
+                            </ReactTooltip>
                             {" "}
                             <Button
                                 size="sm"
@@ -424,7 +437,7 @@ class IBoard extends Component {
                                 onClick={this.toggleTheme}>
                                 {this.state.themeButtonText}
                             </Button>
-                            <ReactTooltip id='darklight' type='info'>
+                            <ReactTooltip id='darklight'>
                                 <span>Toggle mode</span>
                             </ReactTooltip>
                         </div>
