@@ -55,6 +55,7 @@ class IBoard extends Component {
     changeUniqueId(event) {
         this.setState({ uniqueId: event.target.value, autoPublish: false });
     }
+
     changeText(event) {
         this.setState({ text: event.target.value, isTextDisabled: false }, () => {
             if (this.state.autoPublish) {
@@ -75,6 +76,7 @@ class IBoard extends Component {
             this.setState({uniqueId: uId}, () => {
                 this.getData();
             });
+            delete localStorage.uid;
         }
     }
     componentWillUnmount(){
@@ -334,7 +336,7 @@ class IBoard extends Component {
                                 variant="info"
                                 size="sm"
                                 // title="Load (Reteieve content)"
-                                data-tip 
+                                data-tip
                                 data-for='load-btn'
                                 onClick={() => {
                                     this.getData();
@@ -349,7 +351,7 @@ class IBoard extends Component {
                             <Button
                                 variant="success"
                                 size="sm"
-                                data-tip 
+                                data-tip
                                 data-for='publish-btn'
                                 onClick={() => {
                                     this.publishData();
@@ -364,7 +366,7 @@ class IBoard extends Component {
                             <Button
                                 size="sm"
                                 title="Clear [Esc]"
-                                data-tip 
+                                data-tip
                                 data-for='clear-btn'
                                 variant="warning font-weight-bold"
                                 onClick={() => this.clearFields()} >
@@ -417,9 +419,14 @@ class IBoard extends Component {
                             <Button
                                 size="sm"
                                 variant="outline-info font-weight-bold"
+                                data-tip
+                                data-for='darklight'
                                 onClick={this.toggleTheme}>
                                 {this.state.themeButtonText}
                             </Button>
+                            <ReactTooltip id='darklight' type='info'>
+                                <span>Toggle mode</span>
+                            </ReactTooltip>
                         </div>
                     </div>
                     <div className="col-3 float-left">
